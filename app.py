@@ -8,13 +8,14 @@ api_key = os.getenv("API_KEY")
 
 BASE_URL = "http://api.aviationstack.com/v1/flights"
 
-# params = {
-#     "access_key": api_key,
-#     # "dep_iata": "DEL",
-#     "arr_iata": "BOM",
-#     # "airline_iata": "6E",
-#     "limit": 5  # Get the latest 5 flights
-# }
+params = {
+    "access_key": api_key,
+    # "dep_iata": "DEL",
+    "arr_iata": "BOM",
+    "flight_status": "landed",
+    # "airline_iata": "6E",
+    "limit": 5  # Get the latest 5 flights
+}
 
 def fetch_flight_data(params):
     response = requests.get(BASE_URL, params=params)
@@ -56,12 +57,60 @@ def check_oldflight_status(params):
     else:
         print(f"Error: {response.status_code}, {response.text}")
 
+# Gave internal server error
+def get_airport_info(api_key, airport_iata):
+    """
+    Fetches airport information from the AviationStack API.
+
+    Args:
+        api_key (str): Your AviationStack API key.
+        airport_iata (str): IATA code of the airport (e.g., "DEL" for Delhi).
+
+    Returns:
+        dict: Airport details or an error message.
+    """
+    base_url = "http://api.aviationstack.com/v1/airports"
+    params = {
+        "access_key": api_key,
+        "iata_code": airport_iata  # Filter by IATA code
+    }
+
+    response = requests.get(base_url, params=params)
+
+    if response.status_code == 200:
+        data = response.json()
+        if "data" in data and data["data"]:
+            airport = data["data"][0]  # Get the first matching airport
+            return {
+                "name": airport.get("airport_name"),
+                "iata": airport.get("iata_code"),
+                "icao": airport.get("icao_code"),
+                "country": airport.get("country_name"),
+                "city": airport.get("city"),
+                "latitude": airport.get("latitude"),
+                "longitude": airport.get("longitude"),
+                "timezone": airport.get("timezone")
+            }
+        else:
+            return {"error": "No airport data found for the given IATA code."}
+    else:
+        return {"error": f"Error {response.status_code}: {response.text}"}
+
+# airport_code = "BLR"  # Example: Delhi Airport
+# airport_info = get_airport_info(api_key, airport_code)
+
+# if "error" in airport_info:
+#     print(airport_info["error"])
+# else:
+#     print(f"Airport: {airport_info['name']} ({airport_info['iata']})")
+#     print(f"Location: {airport_info['city']}, {airport_info['country']}")
+#     print(f"Coordinates: {airport_info['latitude']}, {airport_info['longitude']}")
+#     print(f"Timezone: {airport_info['timezone']}")
+
+
+
+
+
 # check_oldflight_status(params)
-
-
-
-
-
-
-# fetch_flight_data(params)
+fetch_flight_data(params)
 
