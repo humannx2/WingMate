@@ -2,11 +2,14 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 import requests
+from fastapi import FastAPI 
+import uvicorn
 
 load_dotenv()
 api_key = os.getenv("API_KEY")
 
 BASE_URL = "http://api.aviationstack.com/v1/flights"
+app = FastAPI()
 
 params = {
     "access_key": api_key,
@@ -17,16 +20,35 @@ params = {
     "limit": 5  # Get the latest 5 flights
 }
 
-def fetch_flight_data(params):
+@app.get("/flights")  # Define a new endpoint
+def fetch_flight_data_endpoint(arrival: str = None, departure: str = None, airline_num: str = None, flight_status: str = None, limit: int = 5):
+    # Initialize an empty params dictionary
+    params = {"access_key": api_key, "limit": limit}
+    # Add parameters only if values are provided
+    if departure:
+        params["dep_iata"] = departure
+    # if arrival:
+    #     params["arr_iata"] = arrival
+    if airline_num:
+        params["airline_iata"] = airline_num
+    if flight_status:
+        params["flight_status"] = flight_status
+    
     response = requests.get(BASE_URL, params=params)
 
     if response.status_code == 200:
         data = response.json()
+        flights_info = []
         for flight in data['data']:
-            print(f"Flight {flight['flight']['iata']} from {flight['departure']['airport']} to {flight['arrival']['airport']} is currently {flight['flight_status']}.")
+            flights_info.append({
+                "flight": flight['flight']['iata'],
+                "departure": flight['departure']['airport'],
+                "arrival": flight['arrival']['airport'],
+                "status": flight['flight_status']
+            })
+        return {"flights": flights_info}  # Return flight data as JSON
     else:
-        print(f"Error: {response.status_code}, {response.text}")
-
+        return {"error": f"Error: {response.status_code}, {response.text}"}  # Return error as JSON
 
 # params = {
 #     "access_key": api_key,
@@ -112,5 +134,8 @@ def get_airport_info(api_key, airport_iata):
 
 
 # check_oldflight_status(params)
-fetch_flight_data(params)
+# fetch_flight_data_endpoint()
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
