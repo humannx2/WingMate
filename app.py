@@ -1,19 +1,10 @@
 import pandas as pd
 import os
 from dotenv import load_dotenv
-from opensky_api import OpenSkyApi
 import requests
-# print("OpenSky API installed correctly!")
 
 load_dotenv()
-
 api_key = os.getenv("API_KEY")
-
-# base_url = f"https://api.aviationstack.com/v1/countries? access_key = {api_key}"
-
-# response = requests.get(base_url)
-
-# print(response.json())
 
 BASE_URL = "http://api.aviationstack.com/v1/flights"
 
@@ -34,7 +25,6 @@ def fetch_flight_data(params):
             print(f"Flight {flight['flight']['iata']} from {flight['departure']['airport']} to {flight['arrival']['airport']} is currently {flight['flight_status']}.")
     else:
         print(f"Error: {response.status_code}, {response.text}")
-
 
 
 # params = {
