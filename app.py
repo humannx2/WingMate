@@ -4,12 +4,23 @@ from dotenv import load_dotenv
 import requests
 from fastapi import FastAPI 
 import uvicorn
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from fastapi import Request
 
 load_dotenv()
 api_key = os.getenv("API_KEY")
 
 BASE_URL = "http://api.aviationstack.com/v1/flights"
 app = FastAPI()
+
+# Add these lines after creating the FastAPI app
+templates = Jinja2Templates(directory="templates")
+
+# Only mount static files if the directory exists
+if os.path.exists("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
 
 params = {
     "access_key": api_key,
@@ -20,7 +31,8 @@ params = {
     "limit": 5  # Get the latest 5 flights
 }
 
-@app.get("/flights")  # Define a new endpoint
+
+@app.get("/flights")
 def fetch_flight_data_endpoint(arrival: str = None, departure: str = None, airline_num: str = None, flight_status: str = None, limit: int = 5):
     # Initialize an empty params dictionary
     params = {"access_key": api_key, "limit": limit}
@@ -46,7 +58,7 @@ def fetch_flight_data_endpoint(arrival: str = None, departure: str = None, airli
                 "arrival": flight['arrival']['airport'],
                 "status": flight['flight_status']
             })
-        return {"flights": flights_info}  # Return flight data as JSON
+        return {"flights": flights_info}
     else:
         return {"error": f"Error: {response.status_code}, {response.text}"}  # Return error as JSON
 
